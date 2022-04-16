@@ -1,0 +1,55 @@
+\documentclass[a4paper,12pt]{scrartcl}
+
+
+\usepackage[utf8]{inputenc}
+
+\usepackage{amsmath}
+
+
+\title{Homework 01}
+\author{Yesid Cano Castro, Moritz Lönker and Tim Niklas Witte}
+\date{}
+
+\begin{document}
+
+{
+\let\clearpage\relax
+\maketitle
+}
+
+\section*{Task 01}
+
+
+You are tasked with creating an AI for the game of chess. To solve the problem
+using Reinforcement Learning, you have to frame the game of chess as a Markov
+Decision Process (MDP). Describe both the game of chess formally as a MDP,
+also formalize the respective policy.
+
+\subsection*{Solution}
+
+\begin{itemize}
+ \item Set of states $S^{ \textrm{Num rows} \times \textrm{Num columns} \times \textrm{Chess pieces} }$.
+ \item Set of actions $A$: Let be $d = \{\textrm{up}, \textrm{down}, \textrm{right}, \textrm{left}\dots\}$.
+  $A = \bigcup\limits_{i=1}^{\textrm{Chess pieces}} \hat{A_i}$ with $\hat{A_i} = \{x : x\in d \land \textrm{isAvaibleAction(x, i)} \}$. 
+  \item State dynamics/state transition function $p(s'|s,a) = \textrm{makeMove(s,a)}$. $\textrm{makeMove(s,a)}$ returns a next state given action $a$ and current state $s$.
+  \item Reward dynamics $p(R_{t+1}|s,a) = \textrm{killEnemyPiece(s,a)}$.
+  
+  $
+  \textrm{killEnemyPiece(s,a)} =
+  \left\{
+	\begin{array}{ll}
+		1  & \mbox{if } \textrm{action $a$ does capture a enemy piece in current state $s$} \\
+		0 & \mbox{otherwise }
+	\end{array}
+\right.
+$
+  \item Initial state $\mu = \textrm{start state} \in S$.
+  
+  \item Policy: $\pi(s) = \underset{a \in A}{\arg\max} \ V_\pi(s)$ with $V_\pi(s) = \textrm{Number of captured chess pieces from the enemy}$.   
+\end{itemize}
+
+\section*{Task 02}
+
+\section*{Task 03}
+
+\end{document}
