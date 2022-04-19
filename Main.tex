@@ -51,5 +51,23 @@ $
 \section*{Task 02}
 
 \section*{Task 03}
+Discuss the Policy Evaluation and Policy Iteration algorithms from the lecture.
+They explicitly make use of the environment dynamics ($p(s', r|s, a)$).
+\begin{itemize}
+\item Explain what the environment dynamics (i.e. reward function and state
+transition function) are and give at least two examples.
+\item Discuss: Are the environment dynamics generally known and can practi-
+cally be used to solve a problem with RL?
+\end{itemize}
+
+\subsection*{Solution}
+
+The reward function is defined as the expected value of the reward which is gained given a state $s$, in which the agent performs action $a$.\\
+\indent Example 1: $r(s,a) = killEnemyPiece(s,a)$ for chess\\
+\indent Example 2: \\\\
+The state transition function is defined as the probability of reaching state $s'$ given a state $s$, in which the agent performs action $a$. \\
+\indent Example 1: $p(s'|s,a) = makeMove(s,a)$ for chess\\
+\indent Example 2:\\\\
+Generally the environment dynamics are not completely known, if they are completely known this is certainly beneficial, as then it would be possible to calculate an optimal policy given enough computing power. In practise this is of course often not applicable, because of the exponential rise in necessary computing power that comes with many applications (e.g. chess).
 
 \end{document}
