@@ -4,7 +4,7 @@
 \usepackage[utf8]{inputenc}
 
 \usepackage{amsmath}
-
+\usepackage{hyperref}
 
 \title{Homework 01}
 \author{Yesid Cano Castro, Moritz Lönker and Tim Niklas Witte}
@@ -49,6 +49,50 @@ $
 \end{itemize}
 
 \section*{Task 02}
+Check out the LunarLander environment on OpenAI Gym: Check out this Link!.
+Describe the environment as a MDP, include a description how the policy is
+formalized.
+
+\begin{itemize}
+
+\item Sate space: set of 8-dimensional sate vectors where each dimension corresponds to:
+\begin{itemize}
+    \item s[0] is the horizontal coordinate
+    \item s[1] is the vertical coordinate
+    \item s[2] is the horizontal speed
+    \item s[3] is the vertical speed
+    \item s[4] is the angle
+    \item s[5] is the angular speed
+    \item s[6] 1 if first leg has contact, else 0
+    \item s[7] 1 if second leg has contact, else 0
+\end{itemize}
+\item Action space:
+\begin{itemize}
+    \item Do nothing
+    \item Fire left orientation engine
+    \item Fire main engine
+    \item Fire right orientation engine
+
+\end{itemize}
+\item Rewards
+\begin{itemize}
+    \item Moving from the top of the screen to the landing pad and coming.
+    to rest is about 100-140 points.
+    \item If the lander moves away from the landing pad, it loses reward.
+    \item If the lander crashes, it receives an additional -100 points.
+    \item If the lander comes to rest, it receives an additional +100 points.
+    \item Each lander's leg with ground contact is +10 points.
+    \item Firing the main engine is -0.3 points each frame.
+    \item Firing the side engine is -0.03 points each frame.
+    \item Solved is 200 points.
+\end{itemize}
+\item{Formalize a policy:}
+Since there is a total of four actions, one needs to assign a probability to each of them, for example, 0.25 to each of them. In this case, the system is initialized with a random policy.
+\item{Transition:}
+$p(s'|s,a) = 1$; the probability that action $a$ in state $s$ will lead to state $s'$ is one.
+
+\end{itemize}
+Answers were taken from this \href{https://github.com/openai/gym/blob/master/gym/envs/box2d/lunar_lander.py} {repository}
 
 \section*{Task 03}
 Discuss the Policy Evaluation and Policy Iteration algorithms from the lecture.
