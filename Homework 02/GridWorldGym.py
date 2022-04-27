@@ -4,11 +4,10 @@ from enum import Enum
 class GridWorldGym:
 
     class Actions(Enum):
-        TOP = 1
-        DOWN = 2
-        RIGHT = 3
-        LEFT = 4
-
+        TOP = 0
+        DOWN = 1
+        RIGHT = 2
+        LEFT = 3
 
     def __init__(self):
         self.reset()
@@ -21,16 +20,33 @@ class GridWorldGym:
         self.env = np.zeros(shape=(5,5), dtype=np.uint8)
         self.env[self.pos] = 1
         self.isObstacle = np.zeros(shape=(5,5), dtype=np.bool8)
-        self.rewards = np.zeros(shape=(5,5), dtype=np.uint8) 
+        self.rewards = np.zeros(shape=(5,5), dtype=np.int8) 
         self.isTerminal = np.zeros(shape=(5,5), dtype=np.bool8)
+        self.isTerminal[4,4] = True
+        self.rewards[2,2] = -1
 
         self.isObstacle[3,3] = True
         self.rewards[4,4] = 1
-        self.rewards[4,4] = True
+     
 
+        return self.pos 
+    
+    def getState(self):
+        return self.pos 
+        
     def step(self, action):
         
         if self.isValidAction(action):
+            
+            x = np.random.rand()
+
+            # non-deterministic state transition function
+            if x < 0.5:
+                validActionFound = False 
+                while not validActionFound:
+                    action = np.random.choice([self.Actions.TOP, self.Actions.DOWN, self.Actions.RIGHT, self.Actions.LEFT])
+                    validActionFound, _ = self.isValidAction(action)
+                   
             newPos = self.getNewPos(action)
        
             self.env[self.pos] = 0
@@ -44,17 +60,18 @@ class GridWorldGym:
 
     def isValidAction(self, action):
         
-        try:
-            newPos = self.getNewPos(action)
-        except ValueError:
-            return False
+        
+        newPos = self.getNewPos(action)
+
+        if newPos == None:
+            return False, None
         
         x,y = newPos
         if x < 0 or y < 0 or x > 4 or y > 4:
-            return False
+            return False, None
         
         if self.isObstacle[x,y]:
-            return False
+            return False, None
         
         return True, newPos
 
@@ -72,9 +89,40 @@ class GridWorldGym:
         elif action == self.Actions.LEFT:
             newPos = (self.pos[0], self.pos[1] - 1)   
         else: 
-            raise ValueError("Invalid action")
+            newPos = None
         
         return newPos
 
-    def visualize():
-        pass
+    def visualize(self):
+        for x in range(self.env.shape[0]):
+            for y in range(self.env.shape[1]):
+
+                if self.rewards[x,y] == 1:
+                    print("$", end=" ")
+                
+                elif self.rewards[x,y] == -1:
+                    print("-", end=" ")
+                
+                elif self.isObstacle[x,y]:
+                    print("☐", end=" ")
+                else:
+                    print(self.env[x,y], end=" ")
+            
+            print()
+        
+        print()
+        print("Legend:")
+        print("1 = Current position of the agent")
+        print("0 = Empty, reward = 0")
+        print("$ = Terminal state, reward = 1 ")
+        print("- = State to avoid, reward = -1")
+        print("☐ = Obstacle")
+        print("---------------------------------")
+
+    @property
+    def NUM_ACTIONS(self):
+        return 4
+
+    @property
+    def GRID_SHAPE(self):
+        return (5,5)
