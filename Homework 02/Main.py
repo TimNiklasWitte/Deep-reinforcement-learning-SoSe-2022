@@ -18,7 +18,7 @@ def main():
     q_table = np.zeros(shape=(*gym.GRID_SHAPE, gym.NUM_ACTIONS))
 
     gym.visualize()
-
+    
     for num_episode in range(num_episodes):
         print(num_episode)
         done = False
