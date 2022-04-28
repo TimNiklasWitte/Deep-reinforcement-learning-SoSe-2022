@@ -11,14 +11,16 @@ def main():
     strategy = EpsilonGreedyStrategy(start=1.0, end=0.05, decay=0.99)
 
     n_sarsa = 5
-    num_episodes = 1000
+    num_episodes = 2000
     alpha = 0.01
     gamma = 0.99
 
     q_table = np.zeros(shape=(*gym.GRID_SHAPE, gym.NUM_ACTIONS))
 
-    for i in range(num_episodes):
-        print(i)
+    gym.visualize()
+
+    for num_episode in range(num_episodes):
+        print(num_episode)
         done = False
 
         state = gym.reset()
@@ -89,27 +91,28 @@ def main():
                
         strategy.reduce_epsilon()
 
-    print(strategy.get_exploration_rate())
-    
-    gym.visualize()
+        if num_episode % 50 == 0:
+        
+            fig, axs = plt.subplots(nrows=2, ncols=2)
 
-    fig, axs = plt.subplots(nrows=2, ncols=2)
+            cnt = 0
+            for i in range(2):
+                for j in range(2):
+                    img = axs[i, j].imshow(q_table[:, :,cnt])
+                    plt.colorbar(img, ax=axs[i, j])
+                    axs[i, j].set_axis_off()
+                    cnt += 1
+        
+            axs[0, 0].set_title("TOP")
+            axs[0, 1].set_title("DOWN")
+            axs[1, 0].set_title("RIGHT")
+            axs[1, 1].set_title("LEFT")
 
-    cnt = 0
-    for i in range(2):
-        for j in range(2):
-            img = axs[i, j].imshow(q_table[:, :,cnt])
-            plt.colorbar(img, ax=axs[i, j])
-            axs[i, j].set_axis_off()
-            cnt += 1
- 
-    axs[0, 0].set_title("TOP")
-    axs[0, 1].set_title("DOWN")
-    axs[1, 0].set_title("RIGHT")
-    axs[1, 1].set_title("LEFT")
+            plt.suptitle(f"Q-values: {n_sarsa}-step SARSA - {num_episode}th episode")
 
-    plt.tight_layout()
-    plt.show()
+            plt.tight_layout()
+            plt.savefig(f"./Plots/{n_sarsa}-step_SARSA/episode_{num_episode}")
+            #plt.show()
 
 
 def mapIntToAction(actionID, actions):
