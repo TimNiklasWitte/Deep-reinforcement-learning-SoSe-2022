@@ -11,56 +11,82 @@ def main():
     strategy = EpsilonGreedyStrategy(start=1.0, end=0.05, decay=0.99)
 
     n_sarsa = 5
-    num_episodes = 5000
+    num_episodes = 1000
     alpha = 0.01
     gamma = 0.99
 
     q_table = np.zeros(shape=(*gym.GRID_SHAPE, gym.NUM_ACTIONS))
 
     for i in range(num_episodes):
-       
+        print(i)
         done = False
 
         state = gym.reset()
       
         while not done:
             
-            # Choose an action
-            validActionFound = False 
-            while not validActionFound:
+            discounted_rewards = 0
+            current_state = state
+            current_taken_action = None 
 
-                # Exploration
-                if np.random.random() < strategy.get_exploration_rate():
-                    best_action_idx = np.random.randint(0, gym.NUM_ACTIONS)
-
-                # Exploitation
-                else:
-                    q_values = q_table[state[0], state[1], :]
-                    best_action_idx = np.argmax(q_values)
-                
-                best_action = mapIntToAction(best_action_idx, actions)
-                    
-                validActionFound, _ = gym.isValidAction(best_action) 
-
-            # discounted_reward = 0
-            # for _ in range(n_sarsa):
-            #     state = gym.state_transistion_function(state, action)
+            next_state = None 
+            for k in range(0, n_sarsa):
                
-            next_state, reward, isTerminal = gym.step(best_action)
+                # Choose an action
+                validActionFound = False 
+                while not validActionFound:
 
-            q_next = q_table[next_state[0],next_state[1], :]
-            next_best_action_idx = np.argmax(q_next)
+                    # Exploration
+                    if np.random.random() < strategy.get_exploration_rate():
+                        best_action_idx = np.random.randint(0, gym.NUM_ACTIONS)
 
-            predict = q_table[state[0], state[1], best_action_idx]
-            target = reward + gamma*q_table[next_state[0], next_state[1], next_best_action_idx]
+                    # Exploitation
+                    else:
+                        q_values = q_table[state[0], state[1], :]
+                        best_action_idx = np.argmax(q_values)
 
-            q_table[state[0], state[1], best_action_idx] = predict + alpha *(target - predict)
+                    if k == 0:
+                        current_taken_action = best_action_idx 
+                    best_action = mapIntToAction(best_action_idx, actions)
+                    
+                    validActionFound, _ = gym.isValidAction(best_action) 
 
-            state = next_state
-            done = isTerminal
-        
-    
-        
+                next_state, reward, isTerminal = gym.step(best_action)
+                state = next_state
+                done = isTerminal
+
+                discounted_rewards += gamma**k * reward
+
+                if done:
+                    break
+            
+            if not done:
+                
+                # Choose an action
+                validActionFound = False 
+                while not validActionFound:
+
+                    # Exploration
+                    if np.random.random() < strategy.get_exploration_rate():
+                        best_action_idx = np.random.randint(0, gym.NUM_ACTIONS)
+
+                    # Exploitation
+                    else:
+                        q_values = q_table[state[0], state[1], :]
+                        best_action_idx = np.argmax(q_values)
+                    
+                    best_action = mapIntToAction(best_action_idx, actions)
+                    validActionFound, _ = gym.isValidAction(best_action) 
+
+            predict = q_table[current_state[0], current_state[1], current_taken_action]
+            
+            if done:
+                target = discounted_rewards
+            else: 
+                target = discounted_rewards + gamma**n_sarsa *q_table[state[0], state[1], best_action_idx]
+            
+            q_table[current_state[0], current_state[1], current_taken_action] = predict + alpha *(target - predict)
+               
         strategy.reduce_epsilon()
 
     print(strategy.get_exploration_rate())
