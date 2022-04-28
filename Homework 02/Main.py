@@ -109,7 +109,7 @@ def main():
             axs[1, 1].set_title("LEFT")
 
             plt.suptitle(f"Q-values: {n_sarsa}-step SARSA - {num_episode}th episode")
-
+            fig.set_size_inches(10, 10)
             plt.tight_layout()
             plt.savefig(f"./Plots/{n_sarsa}-step_SARSA/episode_{num_episode}")
             #plt.show()
