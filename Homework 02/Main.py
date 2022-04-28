@@ -10,11 +10,12 @@ def main():
     
     strategy = EpsilonGreedyStrategy(start=1.0, end=0.05, decay=0.99)
 
+    n_sarsa = 5
     num_episodes = 5000
     alpha = 0.01
     gamma = 0.99
 
-    q_table = np.zeros(shape=(gym.NUM_ACTIONS, *gym.GRID_SHAPE))
+    q_table = np.zeros(shape=(*gym.GRID_SHAPE, gym.NUM_ACTIONS))
 
     for i in range(num_episodes):
        
@@ -24,8 +25,8 @@ def main():
       
         while not done:
             
+            # Choose an action
             validActionFound = False 
-
             while not validActionFound:
 
                 # Exploration
@@ -34,24 +35,26 @@ def main():
 
                 # Exploitation
                 else:
-                    q_values = q_table[:,state[0], state[1]]
+                    q_values = q_table[state[0], state[1], :]
                     best_action_idx = np.argmax(q_values)
                 
                 best_action = mapIntToAction(best_action_idx, actions)
                     
-                isValidAction, _ = gym.isValidAction(best_action) 
-                if isValidAction:
-                    validActionFound = True
-              
-           
+                validActionFound, _ = gym.isValidAction(best_action) 
+
+            # discounted_reward = 0
+            # for _ in range(n_sarsa):
+            #     state = gym.state_transistion_function(state, action)
                
             next_state, reward, isTerminal = gym.step(best_action)
 
-            q_next = q_table[:,next_state[0],next_state[1] ]
+            q_next = q_table[next_state[0],next_state[1], :]
             next_best_action_idx = np.argmax(q_next)
 
-            q_table[best_action_idx, state[0], state[1]] = \
-                q_table[best_action_idx, state[0], state[1]] + alpha *(reward + gamma*q_table[next_best_action_idx, next_state[0], next_state[1]] - q_table[best_action_idx, state[0], state[1]])
+            predict = q_table[state[0], state[1], best_action_idx]
+            target = reward + gamma*q_table[next_state[0], next_state[1], next_best_action_idx]
+
+            q_table[state[0], state[1], best_action_idx] = predict + alpha *(target - predict)
 
             state = next_state
             done = isTerminal
@@ -69,8 +72,9 @@ def main():
     cnt = 0
     for i in range(2):
         for j in range(2):
-            img = axs[i, j].imshow(q_table[cnt])
+            img = axs[i, j].imshow(q_table[:, :,cnt])
             plt.colorbar(img, ax=axs[i, j])
+            axs[i, j].set_axis_off()
             cnt += 1
  
     axs[0, 0].set_title("TOP")

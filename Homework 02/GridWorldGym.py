@@ -37,17 +37,8 @@ class GridWorldGym:
     def step(self, action):
         
         if self.isValidAction(action):
-            
-            x = np.random.rand()
-
-            # non-deterministic state transition function
-            if x < 0.5:
-                validActionFound = False 
-                while not validActionFound:
-                    action = np.random.choice([self.Actions.TOP, self.Actions.DOWN, self.Actions.RIGHT, self.Actions.LEFT])
-                    validActionFound, _ = self.isValidAction(action)
-                   
-            newPos = self.getNewPos(action)
+        
+            newPos = self.state_transistion_function(self.pos, action)
        
             self.env[self.pos] = 0
             self.env[newPos] = 1
@@ -57,11 +48,21 @@ class GridWorldGym:
             return self.pos, self.rewards[self.pos], self.isTerminal[self.pos]
         else:
             raise ValueError("Invalid action")
+    
+
+    def state_transistion_function(self, state, action):
+        # non-deterministic
+        if np.random.rand() < 0.5:
+            validActionFound = False 
+            while not validActionFound:
+                action = np.random.choice([self.Actions.TOP, self.Actions.DOWN, self.Actions.RIGHT, self.Actions.LEFT])
+                validActionFound, _ = self.isValidAction(action)
+        
+        return self.getNewPos(state, action) # state = position
 
     def isValidAction(self, action):
-        
-        
-        newPos = self.getNewPos(action)
+            
+        newPos = self.getNewPos(self.pos, action)
 
         if newPos == None:
             return False, None
@@ -75,19 +76,19 @@ class GridWorldGym:
         
         return True, newPos
 
-    def getNewPos(self, action):
-       
+    def getNewPos(self, state, action):
+        pos = state 
         if action == self.Actions.TOP:
-            newPos = (self.pos[0] - 1, self.pos[1])    
+            newPos = (pos[0] - 1, pos[1])    
 
         elif action == self.Actions.DOWN:
-            newPos = (self.pos[0] + 1, self.pos[1])    
+            newPos = (pos[0] + 1, pos[1])    
 
         elif action == self.Actions.RIGHT:
-            newPos = (self.pos[0], self.pos[1] + 1)   
+            newPos = (pos[0], pos[1] + 1)   
 
         elif action == self.Actions.LEFT:
-            newPos = (self.pos[0], self.pos[1] - 1)   
+            newPos = (pos[0], pos[1] - 1)   
         else: 
             newPos = None
         
