@@ -55,7 +55,7 @@ class GridWorldGym:
         if np.random.rand() < 0.5:
             validActionFound = False 
             while not validActionFound:
-                action = np.random.choice([self.Actions.TOP, self.Actions.DOWN, self.Actions.RIGHT, self.Actions.LEFT])
+                action = np.random.choice(np.arange(self.NUM_ACTIONS))
                 validActionFound, _ = self.isValidAction(action)
         
         return self.getNewPos(state, action) # state = position
@@ -78,16 +78,16 @@ class GridWorldGym:
 
     def getNewPos(self, state, action):
         pos = state 
-        if action == self.Actions.TOP:
+        if action == self.Actions.TOP.value:
             newPos = (pos[0] - 1, pos[1])    
 
-        elif action == self.Actions.DOWN:
+        elif action == self.Actions.DOWN.value:
             newPos = (pos[0] + 1, pos[1])    
 
-        elif action == self.Actions.RIGHT:
+        elif action == self.Actions.RIGHT.value:
             newPos = (pos[0], pos[1] + 1)   
 
-        elif action == self.Actions.LEFT:
+        elif action == self.Actions.LEFT.value:
             newPos = (pos[0], pos[1] - 1)   
         else: 
             newPos = None
