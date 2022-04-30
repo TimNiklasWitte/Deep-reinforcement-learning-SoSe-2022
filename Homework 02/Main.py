@@ -11,7 +11,7 @@ def main():
     # Argsparse stuff: Set parameter etc.
     # ------------------------------------------------
 
-    parser = argparse.ArgumentParser(description="Present the MC or n-step SARSA algorithm")
+    parser = argparse.ArgumentParser(description="Present the MC or n-step SARSA algorithm. After the episodes are done the Q-Table is plotted: Each Q-value is presented.")
     parser.add_argument("--n", help="Set the n in n step SARSA (default = 1)", required=False, default = 1, type=int)
     parser.add_argument("--MC", help="Use MC instead of SARSA", required=False, default = False, type=bool)
     
@@ -99,7 +99,7 @@ def main():
         # ------------------------------------------------
         # Plot each X episodes the Q-Table
         # ------------------------------------------------
-        if args.plot != 0 and num_episode % args.plot == 0:
+        if (args.plot != 0 and num_episode % args.plot == 0) or num_episode == args.episodes - 1:
             
             fig, axs = plt.subplots(nrows=2, ncols=2)
 
@@ -120,14 +120,16 @@ def main():
             fig.set_size_inches(10, 10)
             plt.tight_layout()
             
-            # Create dir if not exists
-            path = f"./Plots/{n_sarsa}-step_SARSA/episode_{num_episode}"
-            directory = os.path.dirname(path)
-            if not os.path.exists(directory):
-                os.makedirs(directory)
+            if args.plot != 0:
+                # Create dir if not exists
+                path = f"./Plots/{n_sarsa}-step_SARSA/episode_{num_episode}"
+                directory = os.path.dirname(path)
+                if not os.path.exists(directory):
+                    os.makedirs(directory)
 
-            plt.savefig(f"./Plots/{n_sarsa}-step_SARSA/episode_{num_episode}")
-         
+                plt.savefig(f"./Plots/{n_sarsa}-step_SARSA/episode_{num_episode}")
+            else:
+                plt.show()         
 
 if __name__ == "__main__":
     try:
