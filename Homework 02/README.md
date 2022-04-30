@@ -51,10 +51,9 @@ $ = Terminal state, reward = 1
 # Evaluation
 ## 1-step SARSA
 
-<img src="./Plots/1-step_SARSA/episode_999.png" width="250" height="250">
+<img src="./GIFs/2-step_SARSA.gif" width="400" height="400">
 
-<img src="./GIFs/2-step_SARSA.gif" width="250" height="250">
-
+<img src="./Plots/1-step_SARSA/episode_999.png" width="400" height="400">
 
 ## 2-step SARSA
 ![Alt Text](./GIFs/2-step_SARSA.gif)
