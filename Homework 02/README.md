@@ -68,3 +68,7 @@ $ = Terminal state, reward = 1
 ## 5-step SARSA
 ![Alt Text](./GIFs/5-step_SARSA.gif)
 ![Alt Text](./Plots/5-step_SARSA/episode_99.png)
+
+## MC Control with Exploring Starts
+![Alt Text](./GIFs/MC_Control.gif)
+![Alt Text](./Plots/MC_Control/episode_19999.png)

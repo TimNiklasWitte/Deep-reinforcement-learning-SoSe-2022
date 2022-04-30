@@ -139,14 +139,19 @@ def main():
             if isLastPlot and args.lastPlotName != "": # last plot shall be saved
                 plt.savefig(args.lastPlotName)
 
-            if args.plotInterval != 0: # save periodic the plot: all args.plot times
+            # Save periodically the plot: all args.plot times
+            if args.plotInterval != 0:
+                
                 # Create dir if not exists
-                path = f"./Plots/{n_sarsa}-step_SARSA/episode_{num_episode}"
-                directory = os.path.dirname(path)
-                if not os.path.exists(directory):
-                    os.makedirs(directory)
+                if isMC:
+                    path = f"./Plots/MC_Control"
+                else:
+                    path = f"./Plots/{n_sarsa}-step_SARSA"
 
-                plt.savefig(f"./Plots/{n_sarsa}-step_SARSA/episode_{num_episode}")
+                if not os.path.exists(path):
+                    os.makedirs(path)
+             
+                plt.savefig(f"{path}/episode_{num_episode}")
             else:
                 plt.show()         
 
