@@ -24,5 +24,5 @@ class Agent:
                 action_idx = np.argmax(q_values)
                    
             validActionFound, _ = isValidAction(action_idx)
-       
+        
         return action_idx

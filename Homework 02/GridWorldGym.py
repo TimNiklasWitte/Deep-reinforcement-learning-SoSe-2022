@@ -15,10 +15,10 @@ class GridWorldGym:
         
     def reset(self):
         
-        self.pos = (0,0)
+        self.state = (0,0)
 
         self.env = np.zeros(shape=(5,5), dtype=np.uint8)
-        self.env[self.pos] = 1
+        self.env[self.state] = 1
         self.isObstacle = np.zeros(shape=(5,5), dtype=np.bool8)
         self.rewards = np.zeros(shape=(5,5), dtype=np.int8) 
         self.isTerminal = np.zeros(shape=(5,5), dtype=np.bool8)
@@ -29,23 +29,23 @@ class GridWorldGym:
         self.rewards[4,4] = 1
      
 
-        return self.pos 
+        return self.state 
     
     def getState(self):
-        return self.pos 
+        return self.state 
         
     def step(self, action):
         
         if self.isValidAction(action):
         
-            newPos = self.state_transistion_function(self.pos, action)
+            newState = self.state_transistion_function(self.state, action)
        
-            self.env[self.pos] = 0
-            self.env[newPos] = 1
+            self.env[self.state] = 0
+            self.env[newState] = 1
 
-            self.pos = newPos
+            self.state = newState
 
-            return self.pos, self.rewards[self.pos], self.isTerminal[self.pos]
+            return self.state, self.rewards[self.state], self.isTerminal[self.state]
         else:
             raise ValueError("Invalid action")
     
@@ -58,41 +58,42 @@ class GridWorldGym:
                 action = np.random.choice(np.arange(self.NUM_ACTIONS))
                 validActionFound, _ = self.isValidAction(action)
         
-        return self.getNewPos(state, action) # state = position
+        return self.getNewState(state, action) # state = position
 
     def isValidAction(self, action):
             
-        newPos = self.getNewPos(self.pos, action)
+        newState = self.getNewState(self.state, action)
 
-        if newPos == None:
+        if newState == None:
             return False, None
         
-        x,y = newPos
+        x,y = newState
         if x < 0 or y < 0 or x > 4 or y > 4:
             return False, None
         
         if self.isObstacle[x,y]:
             return False, None
         
-        return True, newPos
+        return True, newState
 
-    def getNewPos(self, state, action):
-        pos = state 
+    def getNewState(self, state, action):
+        x, y = state 
+     
         if action == self.Actions.TOP.value:
-            newPos = (pos[0] - 1, pos[1])    
+            newState = (x - 1, y)    
 
         elif action == self.Actions.DOWN.value:
-            newPos = (pos[0] + 1, pos[1])    
+            newState = (x + 1, y)    
 
         elif action == self.Actions.RIGHT.value:
-            newPos = (pos[0], pos[1] + 1)   
+            newState = (x, y + 1)   
 
         elif action == self.Actions.LEFT.value:
-            newPos = (pos[0], pos[1] - 1)   
+            newState = (x, y - 1)   
         else: 
-            newPos = None
+            newState = None
         
-        return newPos
+        return newState
 
     def visualize(self):
         for x in range(self.env.shape[0]):
