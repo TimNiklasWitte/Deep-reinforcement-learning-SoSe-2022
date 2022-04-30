@@ -53,8 +53,8 @@ $ = Terminal state, reward = 1
 
 <img src="./Plots/1-step_SARSA/episode_999.png" width="500" height="500">
 
-![Alt Text](./GIFs/1-step_SARSA.gif =100x100)
-![Alt Text](./Plots/1-step_SARSA/episode_999.png =100x100)
+<img src="./Plots/1-step_SARSA/episode_999.png" width="500" height="500">
+
 
 ## 2-step SARSA
 ![Alt Text](./GIFs/2-step_SARSA.gif)
