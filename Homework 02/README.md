@@ -51,23 +51,23 @@ $ = Terminal state, reward = 1
 # Evaluation
 ## 1-step SARSA
 ![Alt Text](./GIFs/1-step_SARSA.gif)
-![Alt Text](./Plots/1-step_SARSA/episode_99.png)
+![Alt Text](./Plots/1-step_SARSA/episode_999.png)
 
 ## 2-step SARSA
 ![Alt Text](./GIFs/2-step_SARSA.gif)
-![Alt Text](./Plots/2-step_SARSA/episode_99.png)
+![Alt Text](./Plots/2-step_SARSA/episode_999.png)
 
 ## 3-step SARSA
 ![Alt Text](./GIFs/3-step_SARSA.gif)
-![Alt Text](./Plots/3-step_SARSA/episode_99.png)
+![Alt Text](./Plots/3-step_SARSA/episode_999.png)
 
 ## 4-step SARSA
 ![Alt Text](./GIFs/4-step_SARSA.gif)
-![Alt Text](./Plots/4-step_SARSA/episode_99.png)
+![Alt Text](./Plots/4-step_SARSA/episode_999.png)
 
 ## 5-step SARSA
 ![Alt Text](./GIFs/5-step_SARSA.gif)
-![Alt Text](./Plots/5-step_SARSA/episode_99.png)
+![Alt Text](./Plots/5-step_SARSA/episode_999.png)
 
 ## MC Control with Exploring Starts
 ![Alt Text](./GIFs/MC_Control.gif)
