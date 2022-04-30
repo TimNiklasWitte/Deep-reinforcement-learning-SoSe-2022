@@ -51,26 +51,30 @@ $ = Terminal state, reward = 1
 # Evaluation
 ## 1-step SARSA
 
-<img src="./GIFs/2-step_SARSA.gif" width="400" height="400">
-
+<img src="./GIFs/1-step_SARSA.gif" width="400" height="400">
 <img src="./Plots/1-step_SARSA/episode_999.png" width="400" height="400">
 
 ## 2-step SARSA
-![Alt Text](./GIFs/2-step_SARSA.gif)
-![Alt Text](./Plots/2-step_SARSA/episode_999.png)
+
+<img src="./GIFs/2-step_SARSA.gif" width="400" height="400">
+<img src="./Plots/2-step_SARSA/episode_999.png" width="400" height="400">
 
 ## 3-step SARSA
-![Alt Text](./GIFs/3-step_SARSA.gif)
-![Alt Text](./Plots/3-step_SARSA/episode_999.png)
+
+<img src="./GIFs/3-step_SARSA.gif" width="400" height="400">
+<img src="./Plots/3-step_SARSA/episode_999.png" width="400" height="400">
 
 ## 4-step SARSA
-![Alt Text](./GIFs/4-step_SARSA.gif)
-![Alt Text](./Plots/4-step_SARSA/episode_999.png)
+
+<img src="./GIFs/4-step_SARSA.gif" width="400" height="400">
+<img src="./Plots/4-step_SARSA/episode_999.png" width="400" height="400">
 
 ## 5-step SARSA
-![Alt Text](./GIFs/5-step_SARSA.gif)
-![Alt Text](./Plots/5-step_SARSA/episode_999.png)
+
+<img src="./GIFs/5-step_SARSA.gif" width="400" height="400">
+<img src="./Plots/5-step_SARSA/episode_999.png" width="400" height="400">
 
 ## MC Control with Exploring Starts
-![Alt Text](./GIFs/MC_Control.gif)
-![Alt Text](./Plots/MC_Control/episode_19999.png)
+
+<img src="./GIFs/MC_Control.gif" width="400" height="400">
+<img src="./Plots/MC_Control/episode_19999.png" width="400" height="400">
