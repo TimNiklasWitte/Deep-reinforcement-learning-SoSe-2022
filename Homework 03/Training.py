@@ -5,7 +5,6 @@ import tqdm
 from Agent import *
 
 
-
 def main():
     # Logging
     file_path = "test_logs/test"
@@ -28,7 +27,6 @@ def main():
 
     state = env.reset()
 
-    # 500000
     for _ in tqdm.tqdm(range(500000), position=0, leave=True):
 
         action = agent.select_action(state)
