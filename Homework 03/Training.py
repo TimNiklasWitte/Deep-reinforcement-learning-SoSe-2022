@@ -18,7 +18,7 @@ def main():
     env = gym.make('LunarLander-v2')
  
     agent = Agent(input_dims=env.observation_space.shape,
-                   num_actions=env.action_space.n, batch_size=64)
+                   num_actions=env.action_space.n, batch_size=32)
     agent.q_net.summary()
 
     #
@@ -28,6 +28,7 @@ def main():
 
     state = env.reset()
 
+    # 500000
     for _ in tqdm.tqdm(range(500000), position=0, leave=True):
 
         action = agent.select_action(state)
@@ -38,6 +39,9 @@ def main():
         if done_flag:
             state = env.reset() 
     
+
+    agent.replay_memory.run_threads()
+
     #
     # Training            
     # 

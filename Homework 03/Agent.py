@@ -24,7 +24,7 @@ class Agent:
         self.batch_size = batch_size
 
         self.strategy = EpsilonGreedyStrategy(start=1.0, end=0.05, decay=0.99)
-        self.replay_memory = ReplayMemory(capacity=1000000, input_dims=input_dims)
+        self.replay_memory = ReplayMemory(capacity=1000000, input_dims=input_dims, batch_size=batch_size)
 
         self.q_net = DQN(num_actions)
         self.q_net.build((self.batch_size, *input_dims))
@@ -97,7 +97,7 @@ class Agent:
 
         # Sample a random batch
         states, actions, next_state, rewards, dones = \
-            self.replay_memory.sample_batch(self.batch_size)
+            self.replay_memory.sample_batch()
 
         actions = np.array(actions)
        
