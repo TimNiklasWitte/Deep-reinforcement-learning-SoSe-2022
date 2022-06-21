@@ -6,7 +6,7 @@
 
 # Evaluation
 ## Training
-<img src="./media/trainingPlot.png" width="1000" height="400">
+<img src="./media/trainingPlot.png" width="1000" height="300">
 
 
 # Results
