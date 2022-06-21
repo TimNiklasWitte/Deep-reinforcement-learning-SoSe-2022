@@ -10,7 +10,6 @@ class DQN(tf.keras.Model):
         super(DQN, self).__init__()
 
         self.layer_list = [
-            tf.keras.layers.Dense(32, activation='tanh'),
             tf.keras.layers.Dense(64, activation='tanh'),
             tf.keras.layers.Dense(128, activation='tanh'),
             tf.keras.layers.Dense(num_actions, activation=None),
