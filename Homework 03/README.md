@@ -1,8 +1,7 @@
 # Deep reinforcement learning - Homework 03
 ## by Tim Niklas Witte, Bhaskar Majumder, Moritz Lönker 
 
-An agent (DQN) is trained on the LunarLander enviroment of OpenAI Gym.
-[LunarLander enviroment of OpenAI Gym](
+An agent (DQN) is trained on the [LunarLander enviroment of OpenAI Gym](
 https://www.gymlibrary.ml/environments/box2d/lunar_lander/).
 
 For each episode the current performance metrics of the model such as average reward per episode, 
@@ -12,7 +11,27 @@ Score (sum of rewards per episode) are logged (tensorboard).
 Note that, code from Tim Niklas Witte's final project of the IANNWTF course was taken to solve this task:
 [Play Flappy Bird by applying Dueling Double Deep Q Learning](
 https://github.com/schadenfreude2030/iannwtf-project)
-In other words, code for the agent, Q-network, ReplayMemory and the EpsilonGreedyStrategy are reused.
+In other words, code for the training, agent, Q-network, ReplayMemory and the EpsilonGreedyStrategy are reused and slightly changed for solving this task.
+
+# Network
+
+```bash
+Model: "dqn"
+_________________________________________________________________
+ Layer (type)                Output Shape              Param #   
+=================================================================
+ dense (Dense)               multiple                  576       
+                                                                 
+ dense_1 (Dense)             multiple                  8320      
+                                                                 
+ dense_2 (Dense)             multiple                  516       
+                                                                 
+=================================================================
+Total params: 9,412
+Trainable params: 9,412
+Non-trainable params: 0
+_________________________________________________________________
+```
 
 # Usage
 Run `Training.py` to start the training:
