@@ -2,7 +2,7 @@ import tensorflow as tf
 
 class DQN(tf.keras.Model):
     def __init__(self, num_actions: int):
-        """Init the DDDQN. 
+        """Init the DQN. 
 
         Keyword arguments:
         num_actions -- Number of possible actions which can be taken in the gym.
