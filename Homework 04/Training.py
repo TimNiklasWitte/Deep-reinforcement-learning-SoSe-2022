@@ -1,13 +1,12 @@
-from multiprocessing import Process, shared_memory
 import gym
 import numpy as np
 from numpy.random import default_rng
 
 from PolicyNet import *
 
-import cv2
+import tqdm
 
-import matplotlib.pyplot as plt
+
 
 def preprocess(state):
 
@@ -21,141 +20,90 @@ def main():
     file_path = "test_logs/test"
     train_summary_writer = tf.summary.create_file_writer(file_path)
 
- 
-    env = gym.make("CarRacing-v0")
-    env.render()
+    num_envs = 10
+    episode_len = 1000
+    gamma = 0.9
+    batch_size = 32
 
-    env1 = gym.make("CarRacing-v0")
-    env1.render()
-
-
-    input()
+    env = gym.vector.make("CarRacing-v0", num_envs=num_envs)
+    
     policy_net = PolicyNet()
-    policy_net.build((1, *env.observation_space.shape))
+    policy_net.build(env.observation_space.shape)
     policy_net.summary()
+
+    for num_episode in range(100):
     
-    BUFF_SIZE = 200
-    BATCH_SIZE = 32
-
-    gamma = 0.99
-    
-    for num_iteration in range(100):
-
-        states = np.zeros(shape=(BUFF_SIZE, *env.observation_space.shape), dtype=np.uint8)
-        actions = np.zeros(shape=(BUFF_SIZE, *env.action_space.shape), dtype=np.float32)
-        returns = np.zeros(shape=(BUFF_SIZE), dtype=np.float32)
-        
         #
-        # Generate samples
+        # Sampling
         #
+        buff_states = np.zeros(shape=(episode_len, num_envs, *env.observation_space.shape[1:]), dtype=np.uint8)
+        buff_rewards = np.zeros(shape=(episode_len, num_envs), dtype=np.float32)
 
-        print("generate data")
-        idx = 0
-        while idx < BUFF_SIZE:
-            done_float = False 
+        states = env.reset()
+        for idx in tqdm.tqdm(range(episode_len), position=0, leave=True):
 
-            rewards = []
+            states = preprocess(states)
+            action = policy_net(states)
 
-            state = env.reset()
-            env.render()
-            while not done_float:
-
-                state = preprocess(state)
-                state = np.expand_dims(state, axis=0)
-                action = policy_net(state)
-                action = action[0].numpy() # remove batch dim and convert to numpy
-                action[0] = 2*action[0] - 1
-                next_state, reward, done_flag, _ = env.step(action)
-                env.render()
-                rewards.append(reward)
-
-                random_number = np.random.random(1)
-                if random_number < 0.1:
-                    
-                    # calc return
-                    for j in range(len(rewards)):
-                        g_t = 0
-                        for i in range(len(rewards[j:])):
-                            g_t += (gamma**i) * rewards[i]
-
-                    #img = env.render(mode='rgb_array')
-
-                    states[idx] = state #cv2.resize(img, (96,96))
-                    actions[idx] = action
-                    returns[idx] = g_t
-                    
-                    #print(next_state)
-                    # plt.imshow(next_state)
-                    # plt.show()
-                    #env.render()
-                    #print(idx)
-                    idx += 1
-                    
-
-                state = next_state
-
-                if BUFF_SIZE < idx or idx % 100 == 0:
-                    break
-        
-        #
-        # Evaluation
-        #
-        print("Evalation")
-        done_float = False 
-
-        rewards = []
-        score = 0
-        cnt_steps = 0
-
-        env.render()
-        state = env.reset()
-
-        while not done_float:
-            state = preprocess(state)
-            state = np.expand_dims(state, axis=0)
-            action = policy_net(state)
-            action = action[0].numpy() # remove batch dim and convert to numpy
-            action[0] = 2*action[0] - 1
-            next_state, reward, done_flag, _ = env.step(action)
-
-            env.render() # mode='rgb_array'
-
-            rewards.append(reward)
-            score += reward
-            cnt_steps += 1
-            state = next_state
-
+            action = action.numpy() # remove batch dim and convert to numpy
+            action[:,0] = 2*action[:,0] - 1
             
+            next_states, rewards, _ , _ = env.step(action)
 
-            if 1000 < cnt_steps:
-                break
+            buff_states[idx] = states
+            buff_rewards[idx] = rewards
 
-        print(f"  Episode: {num_iteration}")
-        print(f"    Score: {round(score, 2)}")
-        print(f"Avg Score: {round(np.mean(rewards), 2)}")
-        print(f"    Steps: {cnt_steps}")
+            states = next_states
+         
+        # Evaluation: Consider only first env
+
+        rewards = buff_rewards[:, 0]
+
+        score = np.sum(rewards)
+        rewards = np.mean(rewards)
+        
+
+        print(f"  Episode: {num_episode}")
+        print(f"    Score: {round(score,2)}")
+        print(f"Avg Score: {round(rewards, 2)}")
         print("------------------------") 
 
         with train_summary_writer.as_default():
-            tf.summary.scalar(f"Average reward", np.mean(rewards), step=num_iteration)
-            tf.summary.scalar(f"Score", score, step=num_iteration)
-            tf.summary.scalar(f"Steps per episode", cnt_steps, step=num_iteration)
+            tf.summary.scalar(f"Average reward", rewards, step=num_episode)
+            tf.summary.scalar(f"Score", score, step=num_episode)
+
+
+        buff_returns = np.zeros(shape=(episode_len, num_envs), dtype=np.float32)
+
+   
+        # calc return
+        for start_idx in range(episode_len):
+
+            g_t = np.zeros(shape=(num_envs,), dtype=np.float32)
+            for i in range(episode_len - start_idx): #range(len(rewards[j:])):
+                rewards = buff_rewards[start_idx + i, :]
+                g_t += (gamma**i) * rewards
+
+            buff_returns[start_idx] = g_t
+
+        # Merge two axes: episode_len and num_envs 
+        buff_size =  episode_len * num_envs 
+        buff_states = np.reshape(buff_states, newshape=(buff_size, *env.observation_space.shape[1:]) )
+        buff_returns = np.reshape(buff_returns, newshape=(buff_size,))
+
 
         #
-        # Generate samples
+        # Training
         #
-        print("Training")
+
+        # sample batch
         rng = default_rng()
-        batch_indices = rng.choice(BUFF_SIZE, size=BATCH_SIZE, replace=False)
+        batch_indices = rng.choice(buff_size, size=batch_size, replace=False)
 
-        sampled_states = states[batch_indices, ...]
+        sampled_states = buff_states[batch_indices, ...]
         sampled_states = preprocess(sampled_states)
 
-        # print(sampled_states[0])
-        # plt.imshow(sampled_states[0])
-        # plt.show()
-
-        sampled_returns = returns[batch_indices]
+        sampled_returns = buff_returns[batch_indices]
 
         policy_net.train_step(sampled_states, sampled_returns)
     
