@@ -6,6 +6,7 @@ from PolicyNet import *
 
 import tqdm
 
+import matplotlib.pyplot as plt
 
 
 def preprocess(state):
@@ -20,22 +21,26 @@ def main():
     file_path = "test_logs/test"
     train_summary_writer = tf.summary.create_file_writer(file_path)
 
-    num_envs = 10
+    num_envs = 15
     episode_len = 1000
-    gamma = 0.9
+    gamma = 0.99
     batch_size = 32
 
-    env = gym.vector.make("CarRacing-v0", num_envs=num_envs)
     
+    env = gym.vector.make("CarRacing-v0", num_envs=num_envs)
+    env.close()
     policy_net = PolicyNet()
     policy_net.build(env.observation_space.shape)
     policy_net.summary()
 
-    for num_episode in range(100):
-    
+    for num_episode in range(250):
+        
+        env = gym.vector.make("CarRacing-v0", num_envs=num_envs)
+
         #
         # Sampling
         #
+ 
         buff_states = np.zeros(shape=(episode_len, num_envs, *env.observation_space.shape[1:]), dtype=np.uint8)
         buff_rewards = np.zeros(shape=(episode_len, num_envs), dtype=np.float32)
 
@@ -48,35 +53,38 @@ def main():
             action = action.numpy() # remove batch dim and convert to numpy
             action[:,0] = 2*action[:,0] - 1
             
-            next_states, rewards, _ , _ = env.step(action)
+            next_states, rewards, dones , _ = env.step(action)
 
             buff_states[idx] = states
             buff_rewards[idx] = rewards
 
+            if np.any(dones):
+                states = env.reset()
+
             states = next_states
-         
+        
+        env.close()
         # Evaluation: Consider only first env
 
         rewards = buff_rewards[:, 0]
 
         score = np.sum(rewards)
-        rewards = np.mean(rewards)
+        avg_rewards = np.mean(rewards)
         
 
         print(f"  Episode: {num_episode}")
         print(f"    Score: {round(score,2)}")
-        print(f"Avg Score: {round(rewards, 2)}")
+        print(f"Avg Score: {round(avg_rewards, 2)}")
         print("------------------------") 
 
         with train_summary_writer.as_default():
-            tf.summary.scalar(f"Average reward", rewards, step=num_episode)
+            tf.summary.scalar(f"Average reward", avg_rewards, step=num_episode)
             tf.summary.scalar(f"Score", score, step=num_episode)
 
 
+        # calc return
         buff_returns = np.zeros(shape=(episode_len, num_envs), dtype=np.float32)
 
-   
-        # calc return
         for start_idx in range(episode_len):
 
             g_t = np.zeros(shape=(num_envs,), dtype=np.float32)
