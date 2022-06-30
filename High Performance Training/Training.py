@@ -11,7 +11,6 @@ gpus = tf.config.experimental.list_physical_devices('GPU')
 for gpu in gpus:
   tf.config.experimental.set_memory_growth(gpu, True)
 
-import time
 
 def fill_buff(num_fill_buff_threads, samples_per_thread, thread_id, agent):
 
@@ -41,25 +40,6 @@ def fill_buff(num_fill_buff_threads, samples_per_thread, thread_id, agent):
             state = env.reset() 
 
 
-# def evaluate(agent, threadId):
- 
-#     env = gym.make('LunarLander-v2')
-
-#     # Seed env and np
-#     env.seed(threadId)
-#     np.random.seed(threadId)
-
-#     tf.keras.backend.clear_session()
-
-#     prediction_net_1 = DQN(env.action_space.n)
-#     prediction_net_1.build((1, *env.observation_space.shape))
-
-#     prediction_net_2 = DQN(env.action_space.n)
-#     prediction_net_2.build((1, *env.observation_space.shape))
-
-#     current_prediction_net_id = agent.prediction_net_id.value
-
-
 def generate_samples(agent, threadId):
 
     if threadId == 0:
@@ -85,16 +65,18 @@ def generate_samples(agent, threadId):
     num_episode = 0
 
     while True:
-       
+        
+        print("here: ", agent.prediction_net_1_weights)
         if current_prediction_net_id != agent.prediction_net_id.value:
             current_prediction_net_id = agent.prediction_net_id.value
-
+            
             if current_prediction_net_id == 1:
                 weights = []
                 for weight_matrix in agent.prediction_net_1_weights:
                     matrix = weight_matrix.copy()
                     weights.append(matrix)
 
+                print(weights[0])
                 prediction_net_1.set_weights(weights)
 
             else:
@@ -102,6 +84,7 @@ def generate_samples(agent, threadId):
                 for weight_matrix in agent.prediction_net_2_weights:
                     matrix = weight_matrix.copy()
                     weights.append(matrix)
+                print(weights[0])
 
                 prediction_net_2.set_weights(weights)
 
@@ -128,26 +111,29 @@ def generate_samples(agent, threadId):
 
             state = next_state
             
+            score += reward
+            rewards.append(reward)
+            cnt_steps += 1
 
-            if threadId == 0:
+        agent.strategy.reduce_epsilon()
+        num_episode += 1
+
+        if threadId == 0:
                 
-                score += reward
-                cnt_steps += 1
-                rewards.append(reward)
-                # print(f"  Episode: {num_episode}")
-                # print(f"  Epsilon: {round(agent.strategy.get_exploration_rate(), 2)}")
-                # print(f"    Score: {round(score, 2)}")
-                # print(f"Avg Score: {round(np.mean(rewards), 2)}")
-                # print(f"    Steps: {cnt_steps}")
-                # print("------------------------")
+    
+            # print(f"  Episode: {num_episode}")
+            # print(f"  Epsilon: {round(agent.strategy.get_exploration_rate(), 2)}")
+            # print(f"    Score: {round(score, 2)}")
+            # print(f"Avg Score: {round(np.mean(rewards), 2)}")
+            # print(f"    Steps: {cnt_steps}")
+            # print("------------------------")
  
-                num_episode += 1
-
-                with train_summary_writer.as_default():
-                    tf.summary.scalar(f"Average reward", np.mean(rewards), step=num_episode)
-                    tf.summary.scalar(f"Score", score, step=num_episode)
-                    tf.summary.scalar(f"Epsilon (EpsilonGreedyStrategy)", agent.strategy.get_exploration_rate(), step=num_episode)
-                    tf.summary.scalar(f"Steps per episode", cnt_steps, step=num_episode)
+    
+            with train_summary_writer.as_default():
+                tf.summary.scalar(f"Average reward", np.mean(rewards), step=num_episode)
+                tf.summary.scalar(f"Score", score, step=num_episode)
+                tf.summary.scalar(f"Epsilon (EpsilonGreedyStrategy)", agent.strategy.get_exploration_rate(), step=num_episode)
+                tf.summary.scalar(f"Steps per episode", cnt_steps, step=num_episode)
             
 
 
@@ -167,8 +153,8 @@ def main():
     # Fill ReplayMemory
     # 
 
-    num_fill_buff_threads = 15
-    samples_per_thread = 30000
+    num_fill_buff_threads = 10
+    samples_per_thread = 5000
     fill_buff_threads = []
 
     for thread_idx in range(num_fill_buff_threads):
@@ -185,7 +171,7 @@ def main():
     agent.replay_memory.idx.value = num_fill_buff_threads * samples_per_thread
 
 
-    num_generate_data_threads = 3
+    num_generate_data_threads = 1
     generate_data_threads = []
 
     for thread_id in range(num_generate_data_threads):
@@ -213,7 +199,7 @@ def main():
     episode = 0
     while True:
 
-        for i in range(5000):
+        for i in range(1000):
 
             states, actions, next_state, rewards, dones = agent.replay_memory.sample_batch()
 
@@ -232,18 +218,18 @@ def main():
 
             q_net.train_step(states, target)
 
-            if i % 150 == 0:
-                agent.strategy.reduce_epsilon()
-           
-                if agent.prediction_net_id.value == 1:
-                    agent.update_prediction_net_2(q_net)
-                    agent.prediction_net_id.value == 2
-                else:
-                    agent.update_prediction_net_1(q_net)
-                    agent.prediction_net_id.value == 1
+        print("update")   
+        if agent.prediction_net_id.value == 1:
+            print("here 1",agent.prediction_net_1_weights)
+            agent.update_prediction_net_2(q_net)
+            agent.prediction_net_id.value == 2
+            print(agent.prediction_net_id.value)
+        else:
+            agent.update_prediction_net_1(q_net)
+            agent.prediction_net_id.value == 1
 
-            if i % 5000 == 0:
-                target_net.set_weights(q_net.get_weights())
+        
+        target_net.set_weights(q_net.get_weights())
 
      
 

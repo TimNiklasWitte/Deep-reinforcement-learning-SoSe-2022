@@ -1,3 +1,4 @@
+
 from tkinter import Y
 import tensorflow as tf
 
@@ -12,11 +13,14 @@ class PolicyNet(tf.keras.Model):
             tf.keras.layers.Flatten()
         ]
 
-        self.mu_0 = tf.keras.layers.Dense(1, activation='tanh')
-        self.mu_1_2 = tf.keras.layers.Dense(2, activation='sigmoid')
+        # steering [-1, 1]
+        # gas [0, 1]
+        # breaking [0, 1]
+        self.mu_steering = tf.keras.layers.Dense(1, activation='tanh')
+        self.mu_gas_breaking = tf.keras.layers.Dense(2, activation='sigmoid')
 
-        self.sigma_0 = tf.keras.layers.Dense(1, activation='sigmoid')
-        self.sigma_1_2 = tf.keras.layers.Dense(2, activation='sigmoid')
+        self.sigma_steering = tf.keras.layers.Dense(1, activation='sigmoid')
+        self.sigma_gas_breaking = tf.keras.layers.Dense(2, activation='sigmoid')
 
         self.optimizer = tf.keras.optimizers.Adam(learning_rate=0.0001)
    
@@ -26,46 +30,47 @@ class PolicyNet(tf.keras.Model):
         for layer in self.layer_list:
             x = layer(x)
 
-        mu_0 = self.mu_0(x)
-        mu_1_2 = self.mu_1_2(x)
+        
+        mu_steering = self.mu_steering(x)
+        mu_gas_breaking = self.mu_gas_breaking(x)
  
-        sigma_0 = self.sigma_0(x)
-        sigma_1_2 = self.sigma_1_2(x)
+        sigma_steering = self.sigma_steering(x)
+        sigma_gas_breaking = self.sigma_gas_breaking(x)
 
         # reparameterization trick
         batch_size = x.shape[0]
-        epsilon_0 = tf.random.normal(shape=(batch_size, 1))
-        y_0 = mu_0 + epsilon_0 * sigma_0
-        
-        epsilon_2_3 = tf.random.normal(shape=(batch_size, 1))
-        y_2_3 = mu_1_2 + epsilon_2_3 * sigma_1_2
-
+        # epsilon = tf.random.normal(shape=(batch_size, 1))
+        # action_steering = mu_steering + epsilon * sigma_steering
+        action_steering = tf.random.normal(shape=(batch_size, 1), mean=mu_steering, stddev=sigma_steering)
+        # epsilon = tf.random.normal(shape=(batch_size, 2))
+        # action_gas_breaking = mu_gas_breaking + epsilon * sigma_gas_breaking
+        action_gas_breaking = tf.random.normal(shape=(batch_size, 2), mean=mu_gas_breaking, stddev=sigma_gas_breaking)
         # clipping
-        y_0 = tf.clip_by_value(y_0, -1, 1)
-        y_2_3 = tf.clip_by_value(y_2_3, 0, 1)
+        action_steering = tf.clip_by_value(action_steering, -1, 1)
+        action_gas_breaking = tf.clip_by_value(action_gas_breaking, 0, 1)
 
-        actions = tf.concat([y_0, y_2_3], axis=-1)
+        actions = tf.concat([action_steering, action_gas_breaking], axis=-1)
 
         # scale y_0 from [-1, 1] to [0, 1]
-        y_0 = (y_0 + 1 + 0.000001) / 2 # avoid div by 0
-        probs_actions = tf.concat([y_0, y_2_3], axis=-1)
+        action_steering = (action_steering + 1) / 2
+        probs_actions = tf.concat([action_steering + 0.0001, action_gas_breaking + 0.0001], axis=-1)
         log_probs_actions = tf.math.log(probs_actions)
 
         return actions, log_probs_actions
             
 
     @tf.function
-    def train_step(self, state, g_t):
+    def train_step(self, buff_states, buff_returns):
         
-
+        episode_len = buff_states.shape[0]
+        
         with tf.GradientTape() as tape:
-            _, log_probs_actions = self(state)
-            update = -tf.math.multiply(g_t[:, tf.newaxis], log_probs_actions)
-        
+            update = 0
+            for idx in range(episode_len):
+                states = buff_states[idx]
+                g_t = buff_returns[idx]
+                _, log_probs_actions = self(states)
+                update += -tf.math.multiply(g_t[:, tf.newaxis], log_probs_actions)
+
         gradients = tape.gradient(update, self.trainable_variables)
- 
         self.optimizer.apply_gradients(zip(gradients, self.trainable_variables))
-
-
-
-

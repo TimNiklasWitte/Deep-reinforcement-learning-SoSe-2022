@@ -23,7 +23,7 @@ class Agent:
 
         self.batch_size = batch_size
 
-        self.strategy = EpsilonGreedyStrategy(start=1.0, end=0.05, decay=0.99)
+        self.strategy = EpsilonGreedyStrategy(start=1.0, end=0.05, decay=0.999)
         self.replay_memory = ReplayMemory(capacity=2500000, input_dims=input_dims, batch_size=batch_size)
 
         #tf.keras.backend.clear_session()

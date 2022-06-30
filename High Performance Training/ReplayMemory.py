@@ -50,7 +50,7 @@ class ReplayMemory:
         # Presampling
         #
         
-        self.num_pre_sampling_batches_threads = 5
+        self.num_pre_sampling_batches_threads = 10
         self.pre_sampling_batches_threads = []
 
         self.num_pre_sampled_batches = 200

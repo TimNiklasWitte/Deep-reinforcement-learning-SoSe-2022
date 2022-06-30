@@ -1,6 +1,5 @@
 import gym
 import numpy as np
-from numpy.random import default_rng
 
 from PolicyNet import *
 
@@ -16,17 +15,14 @@ def preprocess(state):
     return state
 
 
-def make_env():
-    return gym.make("CarRacing-v1")
-
 def main():
 
     # Logging
     file_path = "test_logs/test"
     train_summary_writer = tf.summary.create_file_writer(file_path)
 
-    batch_size = 16
-    episode_len = 500
+    batch_size = 32
+    episode_len = 250
     gamma = 0.99
         
     env = gym.vector.make("CarRacing-v1", num_envs=batch_size)
@@ -36,7 +32,7 @@ def main():
     policy_net.summary()
 
 
-    for num_episode in range(250):
+    for num_episode in range(500):
 
         buff_states = np.zeros(shape=(episode_len, batch_size, *env.observation_space.shape[1:]), dtype=np.float32)
         buff_rewards = np.zeros(shape=(episode_len, batch_size), dtype=np.float32)
@@ -72,6 +68,8 @@ def main():
             tf.summary.scalar(f"Score", score, step=num_episode)
 
 
+
+        buff_returns = np.zeros(shape=(episode_len, batch_size), dtype=np.float32)
         for start_idx in range(episode_len):
 
             g_t = np.zeros(shape=(batch_size,), dtype=np.float32)
@@ -79,9 +77,14 @@ def main():
                 rewards = buff_rewards[start_idx + i, :]
                 g_t += (gamma**i) * rewards
 
-            states = buff_states[start_idx]
+            buff_returns[start_idx] = g_t
 
-            policy_net.train_step(states, g_t)
+
+        policy_net.train_step(buff_states, buff_returns)
+
+        if num_episode % 10 == 0:
+            policy_net.save_weights(f"./saved_models/trained_weights_episode_{num_episode}", save_format="tf")
+
    
 
 
