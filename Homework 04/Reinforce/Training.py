@@ -22,7 +22,7 @@ def main():
     train_summary_writer = tf.summary.create_file_writer(file_path)
 
     batch_size = 32
-    episode_len = 75
+    episode_len = 50
     gamma = 0.99
         
     env = gym.vector.make("CarRacing-v1", num_envs=batch_size)
