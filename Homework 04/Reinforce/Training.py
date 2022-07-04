@@ -22,7 +22,7 @@ def main():
     train_summary_writer = tf.summary.create_file_writer(file_path)
 
     batch_size = 32
-    episode_len = 250
+    episode_len = 75
     gamma = 0.99
         
     env = gym.vector.make("CarRacing-v1", num_envs=batch_size)
@@ -32,7 +32,7 @@ def main():
     policy_net.summary()
 
 
-    for num_episode in range(500):
+    for num_episode in range(1000):
 
         buff_states = np.zeros(shape=(episode_len, batch_size, *env.observation_space.shape[1:]), dtype=np.float32)
         buff_rewards = np.zeros(shape=(episode_len, batch_size), dtype=np.float32)
