@@ -53,14 +53,31 @@ def main():
 
             states = next_states
         
-        # Evaluation: Consider only first env
-        rewards = buff_rewards[:, 0]
+        # Evaluation
+        env_test = gym.make("CarRacing-v1")
+        state = env_test.reset()
+
+        rewards = []
+        for test_run_step in range(episode_len):
+            state = preprocess(state)
+            state = np.expand_dims(state, axis=0)
+            action, _ = policy_net(state)
+            action = action.numpy()
+            action = action[0]
+                
+            next_state, reward, done , _ = env_test.step(action)
+
+            state = next_state
+            rewards.append(reward)
+            if done:
+                break 
+
         score = np.sum(rewards)
         avg_rewards = np.mean(rewards)
         
         print(f"  Episode: {num_episode}")
         print(f"    Score: {round(score,2)}")
-        print(f"Avg Score: {round(avg_rewards, 2)}")
+        print(f"Avg Reward: {round(avg_rewards, 2)}")
         print("------------------------") 
 
         with train_summary_writer.as_default():
