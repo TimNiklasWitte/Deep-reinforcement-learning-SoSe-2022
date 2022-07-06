@@ -15,8 +15,9 @@ def preprocess(state):
 
 def main():
 
-    episode_len = 500
+    episode_len = 50
     gamma = 0.99
+    target_kl = 0.01
 
     env = gym.make("CarRacing-v1")
     state = env.reset()
@@ -60,35 +61,44 @@ def main():
         # V(s) = r_t + gamma*V(s_(t+1))
         values_target = reward + gamma*value_net(next_state)
 
-        episodeMemory.store(state, values_target, action, log_prob, reward, advantage, next_state)
+        episodeMemory.store(state, values_target, action, log_prob, advantage)
         state = next_state
 
+  
     #
     # Create dataset
     #
-    states = episodeMemory.states#.copy()
-    values = episodeMemory.values#.copy()
+    states = episodeMemory.states
+    values_target = episodeMemory.values_target
+    actions = episodeMemory.actions
+    log_probs = episodeMemory.log_probs
+    advantages = episodeMemory.advantages 
 
-    dataset = tf.data.Dataset.from_tensor_slices((states, values))
-    dataset = dataset.batch(10)
-
+    dataset = tf.data.Dataset.from_tensor_slices((states, values_target, actions, log_probs, advantages))
+    dataset = dataset.shuffle(episode_len)
+    dataset = dataset.batch(10, drop_remainder=True)
+    dataset = dataset.prefetch(tf.data.experimental.AUTOTUNE)
+    
     #
     # Train policy net
     #
-    for state, values_target in dataset.take(10):
-        loss = value_net.train_step(state, values_target)
-        print(loss)
-        
+    for states, _, actions, log_probs, advantages in dataset.take(10):
+        kl = policy_net.train_step(states, log_probs, advantages)
+
+        print(log_probs)
+        # Early stopping mechanism
+        if kl > 1.5 * target_kl:
+            break
+
+    return 
     # 
     # Train value net
     #
-    for state, values_target in dataset.take(10):
+    for state, values_target, _, _, _ in dataset.take(10):
         loss = value_net.train_step(state, values_target)
-        print(loss)
 
 
     episodeMemory.reset()
-
 
     return 
     # Logging

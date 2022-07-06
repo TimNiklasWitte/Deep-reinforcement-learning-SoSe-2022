@@ -33,8 +33,6 @@ class ValueNet(tf.keras.Model):
             values_prediction = self(states)
             loss = self.loss_function(values_prediction, values_target)
 
-
-        print(loss)
         gradients = tape.gradient(loss, self.trainable_variables)
         self.optimizer.apply_gradients(zip(gradients, self.trainable_variables))
 

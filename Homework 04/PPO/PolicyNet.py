@@ -57,12 +57,30 @@ class PolicyNet(tf.keras.Model):
         return actions, log_probs_actions
             
 
-    @tf.function
-    def train_step(self, states, advantages):
+    #@tf.function
+    def train_step(self, states, log_probs, advantages):
         
+        epsilon = 0.2 
+       
+
         with tf.GradientTape() as tape:
-            _, log_probs_actions = self(states)
-            update = -tf.math.multiply(advantages, log_probs_actions)
+            
+            _ , currentPolicy_log_prob = self(states)
+            oldPolicy_log_prob = log_probs
+
+            ratio = tf.exp( currentPolicy_log_prob - oldPolicy_log_prob)
+            clipped_ratio = tf.clip_by_value (ratio, 1 - epsilon, 1 + epsilon)
+    
+            print(clipped_ratio)
+            print(advantages)
+            print("-----------")
+            print(ratio*advantages)
+            update = -tf.reduce_mean(
+                tf.minimum(clipped_ratio*advantages, ratio*advantages)
+            )
 
         gradients = tape.gradient(update, self.trainable_variables)
         self.optimizer.apply_gradients(zip(gradients, self.trainable_variables))
+
+        kl = 0
+        return kl
