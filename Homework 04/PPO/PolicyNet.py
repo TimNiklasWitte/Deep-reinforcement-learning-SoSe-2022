@@ -85,8 +85,8 @@ class PolicyNet(tf.keras.Model):
             clipped_ratio = tf.clip_by_value (ratio, 1 - epsilon, 1 + epsilon)
 
             # Three probs -> one prob by using mean
-            ratio = tf.reduce_mean(ratio, axis=-1)
-            clipped_ratio = tf.reduce_mean(clipped_ratio, axis=-1)
+            ratio = tf.reduce_prod(ratio, axis=-1)
+            clipped_ratio = tf.reduce_prod(clipped_ratio, axis=-1)
 
             update = -tf.reduce_mean(
                 tf.minimum(clipped_ratio*advantages, ratio*advantages)

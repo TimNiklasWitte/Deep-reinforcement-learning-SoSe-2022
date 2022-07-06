@@ -6,8 +6,8 @@ class ValueNet(tf.keras.Model):
         super(ValueNet, self).__init__()
 
         self.layer_list = [
-            tf.keras.layers.Conv2D(4, kernel_size=(3, 3), strides=(3,3), padding="same", activation="tanh"),
             tf.keras.layers.Conv2D(8, kernel_size=(3, 3), strides=(3,3), padding="same", activation="tanh"),
+            tf.keras.layers.Conv2D(16, kernel_size=(3, 3), strides=(3,3), padding="same", activation="tanh"),
             tf.keras.layers.Flatten(),
             tf.keras.layers.Dense(1, activation=None)
         ]
