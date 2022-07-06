@@ -16,7 +16,7 @@ def preprocess(state):
 def main():
 
     train_steps = 10000
-    steps_until_reset = 500
+    steps_until_reset = 100
     steps_until_evalution = 100
     evaluation_steps = 100
     steps_until_modelSave = 1000
@@ -85,6 +85,7 @@ def main():
             state = env_test.reset()
 
             rewards = []
+            score = 0
             for test_run_step in range(evaluation_steps):
                 state = preprocess(state)
                 state = np.expand_dims(state, axis=0)
@@ -96,6 +97,7 @@ def main():
 
                 state = next_state
                 rewards.append(reward)
+                score += reward
                 if done:
                     break 
             
@@ -104,12 +106,14 @@ def main():
 
             
             print(f" Iteration: {step_num}")
+            print(f"     Score: {score}")
             print(f"Avg reward: {avg_reward}")
             print(f"      Loss: {loss}")
             print("------------------------")
 
             loss = loss.numpy()
             with train_summary_writer.as_default():
+                tf.summary.scalar(f"Score", score, step=step_num)
                 tf.summary.scalar(f"Average reward", avg_reward, step=step_num)
                 tf.summary.scalar(f"Loss", loss, step=step_num)
             
