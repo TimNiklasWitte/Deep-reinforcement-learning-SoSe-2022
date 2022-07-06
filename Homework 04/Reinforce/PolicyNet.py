@@ -37,27 +37,39 @@ class PolicyNet(tf.keras.Model):
         sigma_steering = self.sigma_steering(x)
         sigma_gas_breaking = self.sigma_gas_breaking(x)
 
-        # reparameterization trick
+        #
+        # Actions
+        #
+
         batch_size = x.shape[0]
-        # epsilon = tf.random.normal(shape=(batch_size, 1))
-        # action_steering = mu_steering + epsilon * sigma_steering
-        action_steering = tf.random.normal(shape=(batch_size, 1), mean=mu_steering, stddev=sigma_steering)
-        # epsilon = tf.random.normal(shape=(batch_size, 2))
-        # action_gas_breaking = mu_gas_breaking + epsilon * sigma_gas_breaking
-        action_gas_breaking = tf.random.normal(shape=(batch_size, 2), mean=mu_gas_breaking, stddev=sigma_gas_breaking)
-        # clipping
-        action_steering = tf.clip_by_value(action_steering, -1, 1)
-        action_gas_breaking = tf.clip_by_value(action_gas_breaking, 0, 1)
+
+        # steering:
+        # reparameterization trick
+        epsilon = tf.random.normal(shape=(batch_size, 1))
+        action_steering = mu_steering + epsilon * sigma_steering
+
+        # gas, breaking
+        # reparameterization trick
+        epsilon = tf.random.normal(shape=(batch_size, 2))
+        action_gas_breaking = mu_gas_breaking + epsilon * sigma_gas_breaking
 
         actions = tf.concat([action_steering, action_gas_breaking], axis=-1)
 
-        # scale y_0 from [-1, 1] to [0, 1]
-        action_steering = (action_steering + 1) / 2
-        probs_actions = tf.concat([action_steering + 0.0001, action_gas_breaking + 0.0001], axis=-1)
+        #
+        # Probs
+        #
+
+        prob_steering = self.gaussian(action_steering, mu_steering, sigma_steering)
+        prob_gas_breaking = self.gaussian(action_gas_breaking, mu_gas_breaking, sigma_gas_breaking)
+
+        probs_actions = tf.concat([prob_steering, prob_gas_breaking], axis=-1)
         log_probs_actions = tf.math.log(probs_actions)
 
         return actions, log_probs_actions
-            
+
+    
+    def gaussian(self, x, mu, sigma):
+        return tf.exp(-tf.math.pow(x - mu, 2.) / (2 * tf.math.pow(sigma, 2.)))  
 
     @tf.function
     def train_step(self, buff_states, buff_returns):

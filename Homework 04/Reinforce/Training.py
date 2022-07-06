@@ -21,7 +21,8 @@ def main():
     file_path = "test_logs/test"
     train_summary_writer = tf.summary.create_file_writer(file_path)
 
-    batch_size = 32
+    # large batch size + small learning rate help against noise (MC estimate!!!)
+    batch_size = 64
     episode_len = 50
     gamma = 0.99
         
