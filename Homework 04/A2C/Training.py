@@ -82,6 +82,7 @@ def main():
         state = env_test.reset()
 
         rewards = []
+        score = 0
         for test_run_step in range(episode_len):
             state = preprocess(state)
             state = np.expand_dims(state, axis=0)
@@ -93,6 +94,7 @@ def main():
 
             state = next_state
             rewards.append(reward)
+            score += reward
             if done:
                 break 
             
@@ -101,6 +103,7 @@ def main():
 
             
         print(f" Iteration: {num_episode}")
+        print(f"     Score: {score}")
         print(f"Avg reward: {avg_reward}")
         print(f"      Loss: {loss}")
         print("------------------------")
