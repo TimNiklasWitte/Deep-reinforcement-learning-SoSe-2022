@@ -15,6 +15,11 @@ def preprocess(state):
 
 def main():
 
+    # Logging
+    file_path = "test_logs/test"
+    train_summary_writer = tf.summary.create_file_writer(file_path)
+
+    num_episodes = 100
     episode_len = 50
     gamma = 0.99
     target_kl = 0.01
@@ -33,77 +38,112 @@ def main():
 
     episodeMemory = EpisodeMemory(episode_len, env.observation_space.shape, env.action_space.shape[0])
 
-    state = env.reset()
-    for i in range(episode_len):
+    for num_episode in range(num_episodes):
 
-        state = preprocess(state)
-        state = np.expand_dims(state, axis=0)
-        
-        action, log_prob = policy_net(state)
-        action = action.numpy()[0] # convert to numpy + remove batch dim
-        log_prob = log_prob.numpy()[0] # convert to numpy + remove batch dim
+        state = env.reset()
+        for i in range(episode_len):
+
+            state = preprocess(state)
+            state = np.expand_dims(state, axis=0)
+            
+            action, log_prob = policy_net(state)
+            action = action.numpy()[0] # convert to numpy + remove batch dim
+            log_prob = log_prob.numpy()[0] # convert to numpy + remove batch dim
 
 
-        next_state, reward, done , _ = env.step(action)
+            next_state, reward, done , _ = env.step(action)
 
-        next_state = preprocess(next_state)
-        next_state = np.expand_dims(next_state, axis=0)
-        value_next_state = value_net(next_state)
+            next_state = preprocess(next_state)
+            next_state = np.expand_dims(next_state, axis=0)
+            value_next_state = value_net(next_state)
 
-        value_state = value_net(state)
+            value_state = value_net(state)
 
-        # A(s,a) = Q(s,a) - V(s) 
-        #        = r_t + gamma*V(s_(t+1)) - V(s_t)
+            # A(s,a) = Q(s,a) - V(s) 
+            #        = r_t + gamma*V(s_(t+1)) - V(s_t)
 
-        advantage = reward + gamma*value_next_state - value_state
-        
+            advantage = reward + gamma*value_next_state - value_state
+            
 
-        # V(s) = r_t + gamma*V(s_(t+1))
-        values_target = reward + gamma*value_net(next_state)
+            # V(s) = r_t + gamma*V(s_(t+1))
+            values_target = reward + gamma*value_net(next_state)
 
-        episodeMemory.store(state, values_target, action, log_prob, advantage)
-        state = next_state
+            episodeMemory.store(state, values_target, log_prob, advantage)
+            state = next_state
 
-  
-    #
-    # Create dataset
-    #
-    states = episodeMemory.states
-    values_target = episodeMemory.values_target
-    actions = episodeMemory.actions
-    log_probs = episodeMemory.log_probs
-    advantages = episodeMemory.advantages 
-
-    dataset = tf.data.Dataset.from_tensor_slices((states, values_target, actions, log_probs, advantages))
-    dataset = dataset.shuffle(episode_len)
-    dataset = dataset.batch(10, drop_remainder=True)
-    dataset = dataset.prefetch(tf.data.experimental.AUTOTUNE)
     
-    #
-    # Train policy net
-    #
-    for states, _, actions, log_probs, advantages in dataset.take(10):
-        kl = policy_net.train_step(states, log_probs, advantages)
+        #
+        # Create dataset
+        #
+        states = episodeMemory.states
+        values_target = episodeMemory.values_target
+        log_probs = episodeMemory.log_probs
+        advantages = episodeMemory.advantages 
 
-        print(log_probs)
-        # Early stopping mechanism
-        if kl > 1.5 * target_kl:
-            break
+        dataset = tf.data.Dataset.from_tensor_slices((states, values_target, log_probs, advantages))
+        dataset = dataset.shuffle(episode_len)
+        dataset = dataset.batch(10, drop_remainder=True)
+        dataset = dataset.prefetch(tf.data.experimental.AUTOTUNE)
+        
+        #
+        # Train policy net
+        #
+        for states, _, log_probs, advantages in dataset.take(10):
+            kl = policy_net.train_step(states, log_probs, advantages)
+
+            # Early stopping mechanism
+            if kl > 1.5 * target_kl:
+                break
+    
+        # 
+        # Train value net
+        #
+        for state, values_target, _, _ in dataset.take(10):
+            loss = value_net.train_step(state, values_target)
+
+
+        episodeMemory.reset()
+
+        #
+        # Evalation
+        #
+        env_test = gym.make("CarRacing-v1")
+        state = env_test.reset()
+
+        rewards = []
+        for test_run_step in range(episode_len):
+            state = preprocess(state)
+            state = np.expand_dims(state, axis=0)
+            action, _ = policy_net(state)
+            action = action.numpy()
+            action = action[0]
+                    
+            next_state, reward, done , _ = env_test.step(action)
+
+            state = next_state
+            rewards.append(reward)
+            if done:
+                break 
+                
+        env_test.close()
+        avg_reward = np.mean(rewards)
+
+                
+        print(f"   Episode: {num_episode}")
+        print(f"Avg reward: {avg_reward}")
+        print(f"      Loss: {loss}")
+        print("------------------------")
+
+        #
+        # Log
+        #
+        loss = loss.numpy()
+        with train_summary_writer.as_default():
+            tf.summary.scalar(f"Average reward", avg_reward, step=num_episode)
+            tf.summary.scalar(f"Loss", loss, step=num_episode)
 
     return 
-    # 
-    # Train value net
-    #
-    for state, values_target, _, _, _ in dataset.take(10):
-        loss = value_net.train_step(state, values_target)
-
-
-    episodeMemory.reset()
-
-    return 
-    # Logging
-    file_path = "test_logs/test"
-    train_summary_writer = tf.summary.create_file_writer(file_path)
+    
 
     gamma = 0.99
     num_episodes = 1000

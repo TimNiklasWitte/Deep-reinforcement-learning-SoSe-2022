@@ -70,11 +70,11 @@ class PolicyNet(tf.keras.Model):
 
             ratio = tf.exp( currentPolicy_log_prob - oldPolicy_log_prob)
             clipped_ratio = tf.clip_by_value (ratio, 1 - epsilon, 1 + epsilon)
-    
-            print(clipped_ratio)
-            print(advantages)
-            print("-----------")
-            print(ratio*advantages)
+
+            # Three probs -> one prob by using mean
+            ratio = tf.reduce_mean(ratio, axis=-1)
+            clipped_ratio = tf.reduce_mean(clipped_ratio, axis=-1)
+
             update = -tf.reduce_mean(
                 tf.minimum(clipped_ratio*advantages, ratio*advantages)
             )
@@ -82,5 +82,6 @@ class PolicyNet(tf.keras.Model):
         gradients = tape.gradient(update, self.trainable_variables)
         self.optimizer.apply_gradients(zip(gradients, self.trainable_variables))
 
-        kl = 0
+        kl = tf.reduce_mean(oldPolicy_log_prob - currentPolicy_log_prob)
+        kl = tf.reduce_sum(kl)
         return kl
