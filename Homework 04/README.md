@@ -9,7 +9,7 @@ This training is based on the Reinforce, A2C and PPO algorithm.
 
 ## Reinforce
 
-<img src="./media/TrainingPlot_Reinforce.png" width="1000" height="300">
+<img src="./media/TrainingPlot_Reinforce.png">
 
 ## A2C
 
